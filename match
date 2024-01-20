@@ -1,0 +1,23 @@
+bool match(int *p){
+  int k;
+  int j;
+  int count_elem = 0;
+  int flag = 0;
+  for (rule_number = 0; rule_number < getrule_NUM(); rule_number++){
+    count_elem = 0;
+    for (int j = 0; j < count_num; j++) {
+    	for (int k = 0; k < 4; k++){
+          if (expr[rule _number][e][k] != -1) {
+            count elem++;
+          }
+          if (p[j] == expr[rule_number][0][k]){
+            flag++;
+          }
+        }
+    }
+    if (flag == (count elem/count num)){
+    	return true;
+    }
+    flag = 0;
+return false;
+}
