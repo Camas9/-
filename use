@@ -1,0 +1,549 @@
+// Animal identification systemDlg.cpp: 实现文件
+//
+
+#include "pch.h"
+#include "framework.h"
+#include "Animal identification system.h"
+#include "Animal identification systemDlg.h"
+#include "afxdialogex.h"
+#include <afxtempl.h>
+#include<bits/stdc++.h>
+#include <Afxcoll.h>
+#include "CHELPDlg.h"
+using namespace std;
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+#include <locale>
+
+//全局变量
+CString facts[] = {_T("1、反刍动物"),_T("2、蹄类动物"),
+					_T("3、哺乳类动物"),_T("4、眼向前方"),
+					_T("5、有爪"),_T("6、有犬齿"),_T("7、吃肉"),
+					_T("8、会下蛋"),_T("9、会飞"),_T("10、有羽毛"),
+					_T("11、有蹄"),_T("12、食肉动物"),_T("13、鸟类"),
+					_T("14、能产奶"),_T("15、有毛发"),_T("16、善飞"),
+					_T("17、黑色白条纹"),_T("18、会游泳"),_T("19、长腿"),
+					_T("20、长脖子"),_T("21、黑条纹"),_T("22、暗斑点"),
+					_T("23、黄褐色"),_T("信天翁"),_T("企鹅"),
+					_T("鸵鸟"),_T("斑马"),_T("长颈鹿"),_T("老虎"),_T("猎豹")};
+
+int expr[][2][5] = {{{22,23,12,3,-1},{30}}, {{21,23,12,3,-1},{29}}, {{22,19,20,11,-1},{28}}, 		{{21,11,-1,-1,-1},{27}},{{17,19,20,13,-9},{26}},{{17,18,13,-9,-1},{25}},{{16,13,-1,-1,-1},{24}},{{15,-1,-1,-1,-1},{3}},{{14,-1,-1,-1,-1},{3}},{{10,-1,-1,-1,-1},{13}},{{8,9,-1,-1,-1},{13}},{{7,-1,-1,-1,-1},{12}},{{4,5,6,-1,-1},{12}},{{3,11,-1,-1,-1},{2}},{{1,3,-1,-1,-1},{2}} };
+
+//15条规则
+char* rule[] = { "规则1：如果动物有毛发，则该动物是哺乳类动物。","规则2：如果动物有奶，则该单位是哺乳类动物。",
+					  "规则3：如果该动物有羽毛，则该动物是鸟类。","规则4：如果动物会飞，且会下蛋，则该动物是鸟类。",
+					  "规则5：如果动物吃肉，则该动物是食肉动物。","规则6：如果动物有犬齿，且有爪，且眼盯前方，则该动物是食肉动物。",
+					  "规则7：如果动物是哺乳类动物，且有蹄，则该动物是蹄类动物。","规则8：如果动物是哺乳类动物，且是反刍动物，则该动物是蹄类动物。",
+					  "规则9：如果动物是哺乳类动物，且是食肉动物，且是黄褐色的，且有暗斑点，则该动物是猎豹。","规则10：如果动物是茶色的，且是哺乳类动物，且是食肉动物，且有黑条纹，则该动物是老虎。",
+					  "规则11：如果动物有暗斑点，且有长腿，且有长脖子，且是蹄类动物，则该动物是长颈鹿。","规则12：如果动物有黑条纹，且是蹄类动物，则该动物是斑马。",
+					  "规则13：如果动物有长腿，且有长脖子，且是黑色的，且是鸟类动物，且不会飞，则该动物是鸵鸟。","规则14：如果动物是鸟类动物，且不会飞，且会游泳，且是黑色的，则该动物是企鹅。",
+					  "规则15：如果动物是鸟类动物，且善飞，则该动物是信天翁。" };
+
+//15个规则特征结果
+CString InferenceRuleFeature[] = { _T("哺乳类动物"),_T("哺乳类动物"),_T("鸟类"),
+									_T("鸟类"),_T("食肉动物"),_T("食肉动物"),
+									_T("蹄类动物"),_T("蹄类动物"),_T("猎豹"),_T("老虎"),
+									_T("长颈鹿"),_T("斑马"),_T("鸵鸟"),
+									_T("企鹅"),_T("信天翁")};
+//规则库数组
+struct RULE {
+	int flag = 0;
+	CString KeyWord;
+	CString ruels;
+}InferenceRule[15];
+
+int condition_chose[24];			//选择的动物特征
+int count_num = 0;					//记录输入特征个数
+int rule_Max = 4;					//规则前件最大为4
+int rule_number = -1;				//匹配规则标号
+int chose;						//记录输入的特征
+int k = 0;					    //控制condition_chose数组
+int* p = condition_chose;		//操作选项
+
+// 用于应用程序“关于”菜单项的 CAboutDlg 对话框
+class CAboutDlg : public CDialogEx
+{
+public:
+	CAboutDlg();
+// 对话框数据
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_ABOUTBOX };
+#endif
+
+	protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
+
+// 实现
+protected:
+	DECLARE_MESSAGE_MAP()
+};
+
+CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
+{
+}
+
+void CAboutDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+}
+
+BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
+END_MESSAGE_MAP()
+
+
+// CAnimalidentificationsystemDlg 对话框
+
+
+
+CAnimalidentificationsystemDlg::CAnimalidentificationsystemDlg(CWnd* pParent /*=nullptr*/)
+	: CDialogEx(IDD_ANIMAL_IDENTIFICATION_SYSTEM_DIALOG, pParent)
+{
+	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+}
+
+void CAnimalidentificationsystemDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_LIST1, m_list1);
+	DDX_Control(pDX, IDC_LIST2, m_list2);
+	DDX_Control(pDX, IDC_COMBO2, Target_Box);
+	DDX_Control(pDX, IDC_LIST3, m_list3);
+	DDX_Control(pDX, IDC_LIST4, m_list4);
+	DDX_Control(pDX, IDC_LIST5, m_list5);
+	DDX_Control(pDX, IDC_LIST6, m_list6);
+}
+
+BEGIN_MESSAGE_MAP(CAnimalidentificationsystemDlg, CDialogEx)
+	ON_WM_SYSCOMMAND()
+	ON_WM_PAINT()
+	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDC_BUTTON1, &CAnimalidentificationsystemDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON2, &CAnimalidentificationsystemDlg::OnBnClickedButton2)
+	ON_BN_CLICKED(IDC_BUTTON3, &CAnimalidentificationsystemDlg::OnBnClickedButton3)
+	ON_BN_CLICKED(IDC_BUTTON4, &CAnimalidentificationsystemDlg::OnBnClickedButton4)
+	ON_BN_CLICKED(IDC_BUTTON6, &CAnimalidentificationsystemDlg::OnBnClickedButton6)
+	ON_BN_CLICKED(IDC_BUTTON5, &CAnimalidentificationsystemDlg::OnBnClickedButton5)
+	ON_LBN_SELCHANGE(IDC_LIST1, &CAnimalidentificationsystemDlg::OnLbnSelchangeList1)
+	ON_BN_CLICKED(IDC_BUTTON7, &CAnimalidentificationsystemDlg::OnBnClickedButton7)
+END_MESSAGE_MAP()
+
+
+// CAnimalidentificationsystemDlg 消息处理程序
+
+BOOL CAnimalidentificationsystemDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	// 将“关于...”菜单项添加到系统菜单中。
+
+	// IDM_ABOUTBOX 必须在系统命令范围内。
+	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
+	ASSERT(IDM_ABOUTBOX < 0xF000);
+
+	CMenu* pSysMenu = GetSystemMenu(FALSE);
+	if (pSysMenu != nullptr)
+	{
+		BOOL bNameValid;
+		CString strAboutMenu;
+		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
+		ASSERT(bNameValid);
+		if (!strAboutMenu.IsEmpty())
+		{
+			pSysMenu->AppendMenu(MF_SEPARATOR);
+			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
+		}
+	}
+
+	// 设置此对话框的图标。  当应用程序主窗口不是对话框时，框架将自动
+	//  执行此操作
+	SetIcon(m_hIcon, TRUE);			// 设置大图标
+	SetIcon(m_hIcon, FALSE);		// 设置小图标
+
+	// TODO: 在此添加额外的初始化代码
+
+	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
+}
+
+void CAnimalidentificationsystemDlg::OnSysCommand(UINT nID, LPARAM lParam)
+{
+	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
+	{
+		CAboutDlg dlgAbout;
+		dlgAbout.DoModal();
+	}
+	else
+	{
+		CDialogEx::OnSysCommand(nID, lParam);
+	}
+}
+
+// 如果向对话框添加最小化按钮，则需要下面的代码
+//  来绘制该图标。  对于使用文档/视图模型的 MFC 应用程序，
+//  这将由框架自动完成。
+
+void CAnimalidentificationsystemDlg::OnPaint()
+{
+	if (IsIconic())
+	{
+		CPaintDC dc(this); // 用于绘制的设备上下文
+
+		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
+
+		// 使图标在工作区矩形中居中
+		int cxIcon = GetSystemMetrics(SM_CXICON);
+		int cyIcon = GetSystemMetrics(SM_CYICON);
+		CRect rect;
+		GetClientRect(&rect);
+		int x = (rect.Width() - cxIcon + 1) / 2;
+		int y = (rect.Height() - cyIcon + 1) / 2;
+
+		// 绘制图标
+		dc.DrawIcon(x, y, m_hIcon);
+	}
+	else
+	{
+		CDialogEx::OnPaint();
+	}
+}
+
+//当用户拖动最小化窗口时系统调用此函数取得光标
+//显示。
+HCURSOR CAnimalidentificationsystemDlg::OnQueryDragIcon()
+{
+	return static_cast<HCURSOR>(m_hIcon);
+}
+
+//动态数组将存放用户选择的特征值
+CArray<int>Feature;
+
+int getrule_NUM() {
+	int num = 0;
+	num = sizeof(expr) / sizeof(expr[0]);
+	return num;
+}
+
+//匹配规则
+bool match(int* p) {
+	int k;
+	int j;
+	int count_elem = 0;
+	int flag = 0;
+	for (rule_number = 0; rule_number < getrule_NUM(); rule_number++) {
+		count_elem = 0;
+		for (int j = 0; j < count_num; j++) {
+			for (int k = 0; k < 4; k++) {
+				if (expr[rule_number][0][k] != -1) {
+					count_elem++;
+				}
+				if (p[j] == expr[rule_number][0][k]) {
+					flag++;
+				}
+			}
+		}
+		if (flag == (count_elem / count_num)) 
+		{
+			return true;
+		}
+		flag = 0;
+	}
+	return false;
+}
+
+void CAnimalidentificationsystemDlg::OnBnClickedButton1()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	setlocale(LC_CTYPE, "chs");//中文字符
+	CString str_Feature;
+	CString str_Rule;
+	//读文件
+
+	/*CString defaultDir = L"I://大学//2022人工智能课程实践周//Animal identification system//库";	//默认打开的文件路径
+	CString fileName = L"规则库.txt";			//默认打开的文件名
+	CString filter = L"文件 (*.txt; *.csv)|*.txt;*.csv;||";	//文件过虑的类型
+	CFileDialog openFileDlg(TRUE, defaultDir, fileName, OFN_HIDEREADONLY | OFN_READONLY, filter, NULL);
+	INT_PTR result = openFileDlg.DoModal();
+
+	if (result == IDOK)
+	{
+		fileName = openFileDlg.GetPathName();
+		CStdioFile f;
+		CFileException e;
+		if (!f.Open(fileName, CFile::modeRead, &e))
+		{
+			TRACE(_T("File could not be opened %d\n"), e.m_cause);
+		}
+
+		CString str;
+		CString temple;
+		f.ReadString(str);
+
+		for(int i=1;i<=15;i++)
+		{
+			f.ReadString(str);
+			m_list5.AddString(str);//列表组件的变量名字叫做m_list5
+		}
+
+	}
+	*/
+
+	for (int k = 0; k < 15; k++)
+	{
+		InferenceRule[k].flag = k;
+		InferenceRule[k].ruels = rule[k];
+		InferenceRule[k].KeyWord = InferenceRuleFeature[k];
+	}
+
+	if (!m_list1.GetCount() && !m_list5.GetCount())
+	{
+		for(int i = 0;i<23;i++)
+		{
+			str_Feature = facts[i];
+			//将数据添加到m_list1中
+			m_list1.AddString(str_Feature);//列表组件的变量名字叫做m_list1
+			//将数据添加到候选框中
+			Target_Box.AddString(str_Feature);
+		}
+		for (int j = 0; j < 15; j++)
+		{
+			str_Feature = rule[j];
+			//将数据添加到m_list1中
+			m_list5.AddString(str_Feature);//列表组件的变量名字叫做m_list5
+		}
+	}
+	else
+	{
+		MessageBoxA(0, "请点击刷新并重新导入", "警告",0);
+	}
+}
+
+
+void CAnimalidentificationsystemDlg::OnBnClickedButton2()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	// 下拉列表选择对应的数据添加到list2中
+	//str = "a";
+	//m_list2.AddString(str);
+	CString str;
+	int strID = Target_Box.GetCurSel();
+	//将候选框中当前选中的对应位置的元素添加到str中
+	Target_Box.GetLBText(strID, str);
+	//将str添加到m_list2中
+	m_list2.AddString(str);
+	//将选中的str入队
+	for (int i = 0; i <= 23; i++)//特征下标从1开始到23结束
+	{
+		if (facts[i] == str)
+		{
+			Feature.Add(i+1);//匹配的特征值入队
+		}
+	}
+}
+
+void CAnimalidentificationsystemDlg::OnBnClickedButton3()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	//用户界面区代码
+	CString string;
+	CString IF = _T("IF");
+	CString AND = _T("AND");
+	CString THEN = _T("THEN");
+	int u;
+	int l;
+	int count = 1;
+	int result = 0;			//记录结论
+	int Len_Feature = 0;
+
+	//先清除结果框中的所有数据
+	int Count_4 = m_list4.GetCount();
+	for (int i = Count_4; i >= 0; i--)
+		m_list4.DeleteString(i);
+
+	//识别
+	if (!m_list2.GetCount())
+	{
+		MessageBoxA(0,"请在下拉列表中选择特征","警告", 0);
+	}
+	else {
+	//用户选择的特征已经存入Feature动态数组当中，动态数组的起始下标为0
+	//根据动态数组送入数据
+		Len_Feature = Feature.GetSize();
+		count_num = Len_Feature;
+		for (int i = 0; i < Len_Feature; i++)
+		{
+			condition_chose[i] = Feature.GetAt(i);
+		}
+
+	//推理
+		while (match(p))
+		{
+			u = 0;
+			result = expr[rule_number][1][0];
+			for (int i = 0; i < count_num; i++) {
+				for (int j = 0; j < 4; j++) {
+					if (expr[rule_number][0][j] == -1) {
+						u++;
+					}
+					if (p[i] == expr[rule_number][0][j]) {
+						p[i] = -2;				//删除已经用过的前件
+					}
+				}
+			}
+			l = rule_Max - (u / count_num);
+
+	//中间过程
+
+			//printf("%d、 IF ", count);
+			m_list3.AddString(_T("— — — —推理中— — — —"));
+			m_list3.AddString(IF);
+			//printf("%s", facts[expr[rule_number][0][0] - 1]);
+			m_list3.AddString(facts[expr[rule_number][0][0] - 1]);
+
+			for (int i = 1; i < l; i++) 
+			{
+				//printf(" AND %s", facts[expr[rule_number][0][i] - 1]);
+				m_list3.AddString(AND);
+				m_list3.AddString(facts[expr[rule_number][0][i] - 1]);
+			}
+
+			//printf(" THEN %s\n", facts[result - 1]);
+			m_list3.AddString(THEN);
+			m_list3.AddString(facts[result - 1]);
+
+			count++;							//规则计数器
+			p[count_num] = result;
+		}
+	//过程显示
+		//显示的数组框变量名为m_list3
+
+		//推理失败的处理及其结果显示
+		if (match(p) == false && result < 24)
+		{
+			MessageBoxA(0, "没有匹配到动物，请点击重置并选择其他特征进行推理", "警告", 0);
+			m_list4.AddString(_T("NULL"));
+		}
+		//推理成功的处理及其结果显示
+		else if (match(p) == false && result >= 24)
+		{
+			//结果显示
+			CString str_final = facts[result - 1];
+			m_list4.AddString(str_final);
+			for (int i = 0; i < 15; i++)
+			{
+				if (str_final == InferenceRule[i].KeyWord)
+				{
+					CString str_rule = InferenceRule[i].ruels;
+					m_list6.AddString(str_rule);
+				}
+			}
+		}
+
+	}
+}
+
+
+
+void CAnimalidentificationsystemDlg::OnBnClickedButton4()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	if (!m_list2.GetCount())
+	{
+		MessageBoxA(0, "列表为空，无需清空", "警告", 0);
+	}
+	else {
+		//执行清空
+		//清空m_list2里面的所有数据
+		int Count_2 = m_list2.GetCount();
+		for (int i = Count_2; i >= 0; i--)
+			m_list2.DeleteString(i);
+
+		//清空队列里面的所有数据
+		Feature.RemoveAll();
+
+		//清空m_list3里面的所有数据
+		int Count_3 = m_list3.GetCount();
+		for (int i = Count_3; i >= 0; i--)
+			m_list3.DeleteString(i);
+
+		//清空m_list4里面的所有数据
+		int Count_4 = m_list4.GetCount();
+		for (int i = Count_4; i >= 0; i--)
+			m_list4.DeleteString(i);
+
+		//清空m_list5里面的所有数据
+		int Count_6 = m_list6.GetCount();
+		for (int i = Count_6; i >= 0; i--)
+			m_list6.DeleteString(i);
+	}
+}
+
+
+void CAnimalidentificationsystemDlg::OnBnClickedButton6()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	if (!m_list1.GetCount()&&!m_list5.GetCount())
+	{
+		MessageBoxA(0, "列表为空，无需清空", "警告", 0);
+	}
+	else {
+		//执行清空
+		//清空m_list1里面的所有数据
+		int Count_1 = m_list1.GetCount();
+		for (int i = Count_1; i >= 0; i--)
+			m_list1.DeleteString(i);
+
+		//清空m_list2里面的所有数据
+		int Count_2 = m_list2.GetCount();
+		for (int i = Count_2; i >= 0; i--)
+			m_list2.DeleteString(i);
+
+		//清空m_list3里面的所有数据
+		int Count_3 = m_list3.GetCount();
+		for (int i = Count_3; i >= 0; i--)
+			m_list3.DeleteString(i);
+
+		//清空m_list4里面的所有数据
+		int Count_4 = m_list4.GetCount();
+		for (int i = Count_4; i >= 0; i--)
+			m_list4.DeleteString(i);
+
+		//清空m_list5里面的所有数据
+		int Count_5 = m_list5.GetCount();
+		for (int i = Count_5; i >= 0; i--)
+			m_list5.DeleteString(i);
+
+		//清空m_list6里面的所有数据
+		int Count_6 = m_list6.GetCount();
+		for (int i = Count_6; i >= 0; i--)
+			m_list6.DeleteString(i);
+
+		//清空队列里面的所有数据
+		Feature.RemoveAll();
+
+		//清空下拉列表里面的所有值
+		int Count_Taregt = Target_Box.GetCount();
+		for (int i = Count_Taregt; i >= 0; i--)
+		Target_Box.DeleteString(i);
+	}
+}
+
+
+void CAnimalidentificationsystemDlg::OnBnClickedButton5()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	MessageBoxA(0, "小组成员：欧熙杰、孙洪韬、汤文浩、陈轩、郭沪航", "制作组", 0);
+}
+
+
+void CAnimalidentificationsystemDlg::OnLbnSelchangeList1()
+{
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+void CAnimalidentificationsystemDlg::OnBnClickedButton7()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CHELPDlg Dlg;
+	Dlg.DoModal();
